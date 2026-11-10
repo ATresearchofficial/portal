@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A.T Research Center - Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen">
+<!--
+  A.T Research Center - Admin panel (fixed version, 2026-11-06).
+  NOTE: the live project's original admin.html (215 lines) was inspected via the
+  browser but its verbatim text was not available to the fix pass, so this file
+  is a faithful reconstruction of that page's behaviour (same element ids, same
+  function names, same backend calls and intervals) with the known bugs fixed:
+  single load(), loginBox id, corrected esc() mapping, approveTopUp(id, ok, token).
+  Backend calls: getAdminDashboard, updateOrderStatus, handleSupportAction
+  (GET_TICKETS / GET_MESSAGES / SEND_MESSAGE), approveTopUp / rejectTopUp.
+-->
+<div class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+
+  <header class="flex justify-between items-center bg-white border rounded-2xl shadow-sm px-5 py-4">
+    <span class="text-lg md:text-xl font-black text-emerald-600"><i class="fas fa-user-shield mr-2"></i>A.T Research Center - Admin</span>
+    <button id="logoutBtn" onclick="logout()" class="hidden text-gray-500 hover:text-red-600 text-xs md:text-sm font-semibold"><i class="fas fa-sign-out-alt mr-1"></i>Logout</button>
+  </header>
+
+  <!-- Login box -->
+  <div id="loginBox" class="max-w-md mx-auto bg-white rounded-2xl border shadow-sm p-6 md:p-8 space-y-4">
+    <h2 class="text-xl font-black text-gray-900 text-center">Admin Login</h2>
+    <p class="text-xs text-gray-500 text-center">Sign in with an admin account to manage the portal.</p>
+    <input type="email" id="admin-email" placeholder="Admin email" class="w-full px-4 py-3 rounded-lg border text-sm">
+    <input type="password" id="admin-password" placeholder="Password" class="w-full px-4 py-3 rounded-lg border text-sm" onkeypress="if(event.key==='Enter')login()">
+    <button onclick="login()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg text-sm">Login</button>
+    <p id="login-msg" class="text-xs font-bold text-center text-red-600"></p>
+  </div>
+
+  <!-- Admin dashboard (hidden until login) -->
+  <div id="adminBox" class="hidden space-y-6">
+    <div id="stats" class="grid grid-cols-2 md:grid-cols-5 gap-3"></div>
+
+    <section class="bg-white rounded-2xl border shadow-sm p-5">
+      <h3 class="font-black text-sm mb-3">Pending Top-ups</h3>
+      <div id="topups" class="space-y-2 text-xs"><p class="text-gray-400">No pending top-ups.</p></div>
+    </section>
+
+    <section class="bg-white rounded-2xl border shadow-sm p-5">
+      <h3 class="font-black text-sm mb-3">Orders</h3>
+      <div id="orders" class="space-y-2 text-xs"></div>
+    </section>
+
+    <section class="bg-white rounded-2xl border shadow-sm p-5">
+      <h3 class="font-black text-sm mb-3">Installments</h3>
+      <div id="installments" class="space-y-2 text-xs"></div>
+    </section>
+
+    <section class="bg-white rounded-2xl border shadow-sm p-5">
+      <h3 class="font-black text-sm mb-3">Referrals</h3>
+      <div id="referrals" class="space-y-2 text-xs"></div>
+    </section>
+
+    <section class="bg-white rounded-2xl border shadow-sm p-5">
+      <h3 class="font-black text-sm mb-3">Users</h3>
+      <div id="users" class="space-y-2 text-xs overflow-x-auto"></div>
+    </section>
+
+    <section class="bg-white rounded-2xl border shadow-sm p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div>
+        <h3 class="font-black text-sm mb-3">Support Tickets</h3>
+        <div id="tickets" class="space-y-2 text-xs max-h-96 overflow-y-auto"></div>
+      </div>
+      <div class="md:col-span-2 flex flex-col h-96">
+        <h3 id="chat-title" class="font-black text-sm mb-3">Select a ticket to chat</h3>
+        <div id="chat-box" class="flex-grow overflow-y-auto space-y-2 border rounded-xl p-3 bg-gray-50 text-xs"></div>
+        <div class="flex gap-2 mt-3">
+          <input type="text" id="chat-input" placeholder="Type a reply..." class="flex-grow border rounded-xl px-4 py-2.5 text-xs" onkeypress="if(event.key==='Enter')sendChatReply()">
+          <button onclick="sendChatReply()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold">Send</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+// ATRC rebuild: all server calls go to the Cloudflare Workers API. Change the subdomain in WORKER_URL below when the Worker is deployed.
+const WORKER_URL = 'https://atrc-portal-api.gadgetgridofficialservice.workers.dev';
+async function apiCall(fn, body) { const r = await fetch(WORKER_URL + '/api/' + fn, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {})}); return r.json(); }
+let token = sessionStorage.getItem('atrc_admin_token') || '';
+let currentTicketId = null;
+let dashboardTimer = null;
+let chatTimer = null;
+
+// FIX C: escape mapping corrected ('"' -> &quot;, "'" -> &#39;).
+function esc(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function showToast(msg){
+  const el = document.getElementById('login-msg');
+  if(el) el.textContent = msg;
+}
+
+// FIX B: the login box id is 'loginBox' (the old code looked up a wrong id, which is null).
+function login(){
+  const email = document.getElementById('admin-email').value.trim().toLowerCase();
+  const password = document.getElementById('admin-password').value;
+  if(!email || !password){ showToast('Enter email and password.'); return; }
+  apiCall('handleLogin', {email: email, password: password}).then(function(res){
+    if(!res || !res.success){ showToast(res && res.message ? res.message : 'Login failed.'); return; }
+    if(res.user.role !== 'admin'){ showToast('Admin authorization required.'); return; }
+    token = res.sessionToken;
+    sessionStorage.setItem('atrc_admin_token', token);
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('adminBox').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    load();
+    if(dashboardTimer) clearInterval(dashboardTimer);
+    dashboardTimer = setInterval(load, 8000);
+  });
+}
+
+// FIX B: logout() also uses 'loginBox'.
+function logout(){
+  if(token) apiCall('handleLogout', {token: token}).catch(()=>{});
+  token = '';
+  sessionStorage.removeItem('atrc_admin_token');
+  if(dashboardTimer) clearInterval(dashboardTimer);
+  if(chatTimer) clearInterval(chatTimer);
+  dashboardTimer = null; chatTimer = null; currentTicketId = null;
+  document.getElementById('adminBox').classList.add('hidden');
+  document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('loginBox').classList.remove('hidden');
+}
+
+// FIX A: exactly ONE load() — full dashboard render AND ticket refresh.
+// (The original had a second stub load() that overwrote this one, so the
+// dashboard never rendered.)
+function load(){
+  if(!token) return;
+  apiCall('getAdminDashboard', {token: token}).then(function(d){
+    if(!d || !d.success) return;
+    const s = d.stats || {};
+    document.getElementById('stats').innerHTML =
+      [['Users', s.users || 0], ['Orders', s.orders || 0],
+       ['Pending Top-ups', s.pendingTopups || 0], ['Overdue Installments', s.overdueInstallments || 0],
+       ['Referral Rewards Rs.', s.referralRewards || 0]].map(function(x){
+        return '<div class="bg-white border rounded-2xl shadow-sm p-4"><div class="text-[10px] uppercase font-bold text-gray-400">' + esc(x[0]) + '</div><div class="text-xl font-black mt-1">' + esc(x[1]) + '</div></div>';
+      }).join('');
+    const tx = (d.transactions || []).filter(function(t){
+      return String(t.status || '').toLowerCase() === 'pending' &&
+        String(t.type || '').toUpperCase() === 'TOPUP';
+    });
+    document.getElementById('topups').innerHTML = tx.length ? tx.map(function(t){
+      return '<div class="flex flex-wrap items-center justify-between gap-2 border rounded-xl p-3"><span><b>' + esc(t.email || '') + '</b> - Rs. ' + esc(t.amount || 0) + ' (' + esc(t.txid || t.reference || '') + ')</span><span class="flex gap-2">' +
+        '<button onclick="approveTopUp(\'' + esc(t.id || '') + '\', true, token)" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold">Approve</button>' +
+        '<button onclick="approveTopUp(\'' + esc(t.id || '') + '\', false, token)" class="bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold">Reject</button></span></div>';
+    }).join('') : '<p class="text-gray-400">No pending top-ups.</p>';
+    document.getElementById('orders').innerHTML = (d.orders || []).slice().reverse().slice(0, 20).map(function(o){
+      const id = o.order_id || o.id || '';
+      return '<div class="flex flex-wrap items-center justify-between gap-2 border rounded-xl p-3"><span><b>' + esc(o.service || '') + '</b> - ' + esc(o.email || '') + ' - Rs. ' + esc(o.amount || 0) + '</span><span class="flex items-center gap-2"><span class="font-bold">' + esc(o.status || '') + '</span>' +
+        '<select onchange="updateOrderStatus(\'' + esc(id) + '\', this.value, token)" class="border rounded-lg px-2 py-1 text-xs"><option value="">Change status</option><option>Confirmed</option><option>Processing</option><option>Completed</option><option>Cancelled</option></select></span></div>';
+    }).join('') || '<p class="text-gray-400">No orders yet.</p>';
+    document.getElementById('installments').innerHTML = (d.installments || []).slice(0, 20).map(function(x){
+      return '<div class="border rounded-xl p-3">Order <b>' + esc(x.order_id || '') + '</b> - #' + esc(x.installment_no || '') + ' (' + esc(x.percentage || '') + '%) Rs. ' + esc(x.amount || 0) + ' - Due ' + esc(x.due_date || '') + ' - <b>' + esc(x.status || '') + '</b></div>';
+    }).join('') || '<p class="text-gray-400">No installments yet.</p>';
+    document.getElementById('referrals').innerHTML = (d.referrals || []).slice(0, 20).map(function(r){
+      return '<div class="border rounded-xl p-3"><b>' + esc(r.referred_email || r.referredEmail || '') + '</b> referred by ' + esc(r.referrer_email || '') + ' - ' + esc(r.status || '') + ' - Reward Rs. ' + esc(r.reward_amount || 0) + '</div>';
+    }).join('') || '<p class="text-gray-400">No referrals yet.</p>';
+    document.getElementById('users').innerHTML = '<table class="w-full text-left"><tr class="text-gray-400"><th class="py-1 pr-2">Name</th><th class="py-1 pr-2">Email</th><th class="py-1 pr-2">Balance</th><th class="py-1 pr-2">Relief</th><th class="py-1 pr-2">Role</th><th class="py-1">Status</th></tr>' +
+      (d.users || []).map(function(u){
+        return '<tr class="border-t"><td class="py-1 pr-2">' + esc(u.name || '') + '</td><td class="py-1 pr-2">' + esc(u.email || '') + '</td><td class="py-1 pr-2">Rs. ' + esc(u.balance || 0) + '</td><td class="py-1 pr-2">Rs. ' + esc(u.relief_balance || 0) + '</td><td class="py-1 pr-2">' + esc(u.role || '') + '</td><td class="py-1">' + esc(u.status || '') + '</td></tr>';
+      }).join('') + '</table>';
+    fetchAndRenderTickets();
+  });
+}
+
+function fetchAndRenderTickets(){
+  if(!token) return;
+  apiCall('handleSupportAction', {action: 'GET_TICKETS', payload: {token: token}}).then(function(tickets){
+    const box = document.getElementById('tickets');
+    if(!tickets || !tickets.length){ box.innerHTML = '<p class="text-gray-400">No tickets.</p>'; return; }
+    box.innerHTML = tickets.map(function(t){
+      const id = t.ticketId || t.ticket_id || '';
+      return '<div onclick="openTicket(\'' + esc(id) + '\', \'' + esc(t.subject || '') + '\')" class="p-3 border rounded-xl cursor-pointer hover:bg-gray-50"><b>' + esc(t.subject || 'Support Request') + '</b><div class="text-gray-500">' + esc(t.client_email || t.email || '') + ' - ' + esc(t.status || '') + '</div></div>';
+    }).join('');
+  });
+}
+
+// Local wrappers with the same names/signatures the original page used.
+// They forward to the server: approveTopUp(id, ok, token) — ok=true approves,
+// ok=false rejects (the fixed Code.gs handles both forms).
+function approveTopUp(id, ok, tok){
+  apiCall('approveTopUp', {transactionId: id, okOrToken: ok, token: tok || token}).then(function(res){
+    if(res && res.success) load();
+    else alert(res && res.message ? res.message : 'Top-up update failed.');
+  });
+}
+
+function updateOrderStatus(orderId, status, tok){
+  if(!status) return;
+  apiCall('updateOrderStatus', {orderId: orderId, status: status, token: tok || token}).then(function(){ load(); });
+}
+
+function openTicket(ticketId, subject){
+  currentTicketId = ticketId;
+  document.getElementById('chat-title').textContent = subject + ' (' + ticketId + ')';
+  fetchChatMessages();
+  if(chatTimer) clearInterval(chatTimer);
+  chatTimer = setInterval(fetchChatMessages, 4000);
+}
+
+function fetchChatMessages(){
+  if(!token || !currentTicketId) return;
+  apiCall('handleSupportAction', {action: 'GET_MESSAGES', payload: {ticketId: currentTicketId, token: token}}).then(function(msgs){
+    const box = document.getElementById('chat-box');
+    if(!msgs || !msgs.length){ box.innerHTML = '<p class="text-gray-400 text-center my-auto">No messages yet.</p>'; return; }
+    box.innerHTML = msgs.map(function(m){
+      const admin = String(m.senderRole || m.role || '').toLowerCase() === 'admin';
+      return '<div class="' + (admin ? 'bg-white border self-start mr-auto' : 'bg-emerald-600 text-white self-end ml-auto') + ' p-3 rounded-2xl max-w-[75%]"><p>' + esc(m.message || m.msg || '') + '</p><span class="block text-[9px] opacity-70 text-right">' + esc(m.timestamp || m.time || '') + '</span></div>';
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+function sendChatReply(){
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text || !currentTicketId || !token) return;
+  input.value = '';
+  apiCall('handleSupportAction', {action: 'SEND_MESSAGE', payload: {ticketId: currentTicketId, msg: text, token: token}}).then(function(){
+    fetchChatMessages();
+  });
+}
+
+window.onload = function(){
+  if(token){
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('adminBox').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    load();
+    dashboardTimer = setInterval(load, 8000);
+  }
+};
+</script>
+</body>
+</html>

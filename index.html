@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A.T Research Center - Professional Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+// ATRC rebuild: all server calls go to the Cloudflare Workers API. Change the subdomain in WORKER_URL below when the Worker is deployed.
+const WORKER_URL = 'https://atrc-portal-api.gadgetgridofficialservice.workers.dev';
+async function apiCall(fn, body) { const r = await fetch(WORKER_URL + '/api/' + fn, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {})}); return r.json(); }
+tailwind.config = { theme: { extend: { colors: { brand: { 50: '#f0fdf4', 500: '#10b981', 600: '#059669', 700: '#047857' } } } } };
+</script>
+<style>
+.glass-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+.service-card { transition: transform .2s, box-shadow .2s; }
+.service-card:hover { transform: translateY(-3px); box-shadow: 0 18px 45px rgba(15,23,42,.10); }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased min-h-screen flex flex-col justify-between">
+
+<!-- Header -->
+<header class="glass-header sticky top-0 z-40 border-b border-gray-200 px-6 md:px-8 py-4 flex justify-between items-center">
+  <div class="flex items-center space-x-3">
+    <span class="text-lg md:text-xl font-black text-brand-600"><i class="fas fa-atom mr-2"></i>A.T Research Center</span>
+  </div>
+  <div class="space-x-2 md:space-x-4">
+    <a href="./portal.html" class="px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-brand-600 hover:text-brand-700 transition">Login</a>
+    <a href="./portal.html" class="px-3 md:px-4 py-2 text-xs md:text-sm font-bold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow transition">Get Started</a>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-16 md:py-20 px-6 text-center space-y-6">
+  <span class="bg-brand-500/20 text-brand-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Advanced Ecosystems</span>
+  <h1 class="text-3xl md:text-5xl font-black tracking-tight max-w-3xl mx-auto">Institutional Research &amp; Web Automation Portal</h1>
+  <p class="text-gray-300 text-xs md:text-sm max-w-xl mx-auto leading-relaxed">Seamless workflow integration, real-time balance tracking, and automated tracking backed by secure sheet ledgers.</p>
+</section>
+
+<main class="max-w-7xl w-full mx-auto p-4 md:p-6 space-y-12 md:space-y-16 flex-grow">
+
+  <!-- Stats bar -->
+  <section class="grid grid-cols-2 md:grid-cols-5 gap-3 -mt-2">
+    <div class="bg-white border rounded-2xl p-4 shadow-sm text-center"><div id="stat-orders" class="text-xl font-black text-brand-600">301+</div><div class="text-xs font-bold text-gray-600 mt-1">Orders Successfully Delivered</div></div>
+    <div class="bg-white border rounded-2xl p-4 shadow-sm text-center"><div id="stat-progress" class="text-xl font-black text-brand-600">106+</div><div class="text-xs font-bold text-gray-600 mt-1">Orders In Progress</div></div>
+    <div class="bg-white border rounded-2xl p-4 shadow-sm text-center"><div id="stat-pubs" class="text-xl font-black text-brand-600">30+</div><div class="text-xs font-bold text-gray-600 mt-1">Publications Supported</div></div>
+    <div class="bg-white border rounded-2xl p-4 shadow-sm text-center"><div id="stat-rating" class="text-xl font-black text-brand-600">4.3 / 5</div><div class="text-xs font-bold text-gray-600 mt-1">Client Rating</div></div>
+    <div class="bg-white border rounded-2xl p-4 shadow-sm text-center"><div class="text-xl font-black text-brand-600">24/7</div><div class="text-xs font-bold text-gray-600 mt-1">Live Chat Support</div></div>
+  </section>
+
+  <!-- Services -->
+  <section>
+    <div class="text-center mb-8">
+      <h2 class="text-xl md:text-2xl font-black text-gray-900">Our Professional Services</h2>
+      <p class="text-xs md:text-sm text-gray-500">Explore our services and login to order instantly.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <div class="service-card bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-2xl text-brand-600"><i class="fas fa-book"></i></span>
+            <span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Popular</span>
+          </div>
+          <h4 class="font-bold text-gray-900 text-base mb-1">Thesis Writing</h4>
+          <p class="text-xs text-gray-500 mb-4">Complete thesis writing with research design, structure and professional formatting.</p>
+        </div>
+        <div class="flex justify-between items-center pt-4 border-t">
+          <span class="text-lg font-black text-gray-900">Rs. 15000.00</span>
+          <a href="./portal.html" class="bg-brand-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow">Login to Order</a>
+        </div>
+      </div>
+
+      <div class="service-card bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-2xl text-brand-600"><i class="fas fa-file-alt"></i></span>
+            <span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Standard</span>
+          </div>
+          <h4 class="font-bold text-gray-900 text-base mb-1">Synopsis Writing</h4>
+          <p class="text-xs text-gray-500 mb-4">Research synopsis and proposal preparation with expert guidance.</p>
+        </div>
+        <div class="flex justify-between items-center pt-4 border-t">
+          <span class="text-lg font-black text-gray-900">Rs. 7000.00</span>
+          <a href="./portal.html" class="bg-brand-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow">Login to Order</a>
+        </div>
+      </div>
+
+      <div class="service-card bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-2xl text-brand-600"><i class="fas fa-chart-bar"></i></span>
+            <span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Standard</span>
+          </div>
+          <h4 class="font-bold text-gray-900 text-base mb-1">Stats Analysis</h4>
+          <p class="text-xs text-gray-500 mb-4">Statistical analysis with tables, charts and clear interpretation.</p>
+        </div>
+        <div class="flex justify-between items-center pt-4 border-t">
+          <span class="text-lg font-black text-gray-900">Rs. 7000.00</span>
+          <a href="./portal.html" class="bg-brand-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow">Login to Order</a>
+        </div>
+      </div>
+
+      <div class="service-card bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-2xl text-brand-600"><i class="fas fa-newspaper"></i></span>
+            <span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Standard</span>
+          </div>
+          <h4 class="font-bold text-gray-900 text-base mb-1">Publication Support</h4>
+          <p class="text-xs text-gray-500 mb-4">Journal selection, formatting and publication support for research papers.</p>
+        </div>
+        <div class="flex justify-between items-center pt-4 border-t">
+          <span class="text-lg font-black text-gray-900">Rs. 25000.00</span>
+          <a href="./portal.html" class="bg-brand-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow">Login to Order</a>
+        </div>
+      </div>
+
+      <div class="service-card bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-2xl text-brand-600"><i class="fas fa-pen"></i></span>
+            <span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Standard</span>
+          </div>
+          <h4 class="font-bold text-gray-900 text-base mb-1">Article Writing</h4>
+          <p class="text-xs text-gray-500 mb-4">Professional academic article and paper writing.</p>
+        </div>
+        <div class="flex justify-between items-center pt-4 border-t">
+          <span class="text-lg font-black text-gray-900">Rs. 3500.00</span>
+          <a href="./portal.html" class="bg-brand-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow">Login to Order</a>
+        </div>
+      </div>
+
+      <div class="service-card bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-2xl text-brand-600"><i class="fas fa-search"></i></span>
+            <span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Standard</span>
+          </div>
+          <h4 class="font-bold text-gray-900 text-base mb-1">Literature Review</h4>
+          <p class="text-xs text-gray-500 mb-4">Comprehensive literature review with proper citations.</p>
+        </div>
+        <div class="flex justify-between items-center pt-4 border-t">
+          <span class="text-lg font-black text-gray-900">Rs. 14000.00</span>
+          <a href="./portal.html" class="bg-brand-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow">Login to Order</a>
+        </div>
+      </div>
+
+      <div class="service-card bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-2xl text-brand-600"><i class="fas fa-shield-alt"></i></span>
+            <span class="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Standard</span>
+          </div>
+          <h4 class="font-bold text-gray-900 text-base mb-1">Plagiarism &amp; Ai Removing</h4>
+          <p class="text-xs text-gray-500 mb-4">Plagiarism and AI detection removal with originality report.</p>
+        </div>
+        <div class="flex justify-between items-center pt-4 border-t">
+          <span class="text-lg font-black text-gray-900">Rs. 4000.00</span>
+          <a href="./portal.html" class="bg-brand-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow">Login to Order</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="bg-white rounded-3xl p-6 md:p-10 border shadow-sm space-y-8">
+    <h2 class="text-xl md:text-2xl font-black text-gray-900 text-center">About A.T Research Center</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="space-y-3">
+        <div class="flex items-center space-x-3">
+          <span class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-xl text-brand-600"><i class="fas fa-check-double"></i></span>
+          <h4 class="font-bold text-gray-900">Quality Checked</h4>
+        </div>
+        <p class="text-xs text-gray-600 leading-relaxed">Every deliverable goes through a rigorous verification phase. We verify all documentation, check the data flow and ensure every process meets industry standards before it reaches the client.</p>
+      </div>
+      <div class="space-y-3">
+        <div class="flex items-center space-x-3">
+          <span class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-xl text-brand-600"><i class="fas fa-shield-alt"></i></span>
+          <h4 class="font-bold text-gray-900">Secure &amp; Private</h4>
+        </div>
+        <p class="text-xs text-gray-600 leading-relaxed">Our system follows zero-trust principles. End-to-end encryption, audit logs and secure session handling ensure your work and data stay completely protected.</p>
+      </div>
+      <div class="space-y-3">
+        <div class="flex items-center space-x-3">
+          <span class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-xl text-brand-600"><i class="fas fa-chart-line"></i></span>
+          <h4 class="font-bold text-gray-900">Data-Driven</h4>
+        </div>
+        <p class="text-xs text-gray-600 leading-relaxed">Real-time reporting, live client dashboards and financial transparency. Our platform handles complex ecosystems, offering advanced analytics and insights for every order.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Client rating summary -->
+  <section class="bg-white rounded-3xl p-6 md:p-10 border shadow-sm">
+    <div class="text-center mb-6">
+      <h2 class="text-xl md:text-2xl font-black text-gray-900">Verified Client Reviews</h2>
+      <p class="text-xs md:text-sm text-gray-500">Real feedback from clients who ordered through the portal.</p>
+    </div>
+    <div class="flex flex-col md:flex-row items-center justify-center gap-6">
+      <div class="text-center">
+        <div class="text-5xl font-black text-gray-900">4.3<span class="text-2xl text-gray-400">/5</span></div>
+        <div class="text-yellow-400 text-lg mt-2">
+          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Average client rating</p>
+      </div>
+      <div class="text-center md:text-left">
+        <p class="text-sm text-gray-600 leading-relaxed max-w-md">Clients rate us on quality, delivery time and support after their order is delivered. Individual reviews are shown inside the portal after login.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="bg-white rounded-3xl p-6 md:p-10 border shadow-sm">
+    <h2 class="text-xl md:text-2xl font-black text-gray-900 text-center mb-8">Frequently Asked Questions</h2>
+    <div class="space-y-4">
+      <div class="bg-gray-50 rounded-2xl p-5">
+        <button class="faq-toggle flex justify-between w-full font-bold text-sm text-gray-900">How do I place an order?<i class="fas fa-chevron-down text-gray-400"></i></button>
+        <p class="faq-content text-xs text-gray-600 leading-relaxed mt-2">Create an account, add funds to your wallet via JazzCash / EasyPaisa / Bank Transfer, and select your required service to place an order.</p>
+      </div>
+      <div class="bg-gray-50 rounded-2xl p-5">
+        <button class="faq-toggle flex justify-between w-full font-bold text-sm text-gray-900">Is my payment secure?<i class="fas fa-chevron-down text-gray-400"></i></button>
+        <p class="faq-content text-xs text-gray-600 leading-relaxed mt-2">Yes, all transactions are recorded in our secure ledger system and verified by our admin team before your wallet is credited.</p>
+      </div>
+      <div class="bg-gray-50 rounded-2xl p-5">
+        <button class="faq-toggle flex justify-between w-full font-bold text-sm text-gray-900">What is the refund policy?<i class="fas fa-chevron-down text-gray-400"></i></button>
+        <p class="faq-content text-xs text-gray-600 leading-relaxed mt-2">Refunds are handled on a case-by-case basis. Please contact support via the ticket system if you have any issues with your order.</p>
+      </div>
+      <div class="bg-gray-50 rounded-2xl p-5">
+        <button class="faq-toggle flex justify-between w-full font-bold text-sm text-gray-900">How long does it take to complete my work?<i class="fas fa-chevron-down text-gray-400"></i></button>
+        <p class="faq-content text-xs text-gray-600 leading-relaxed mt-2">Delivery time depends on the service and complexity. You can track your order progress in real-time from your dashboard.</p>
+      </div>
+      <div class="bg-gray-50 rounded-2xl p-5">
+        <button class="faq-toggle flex justify-between w-full font-bold text-sm text-gray-900">Can I pay in installments?<i class="fas fa-chevron-down text-gray-400"></i></button>
+        <p class="faq-content text-xs text-gray-600 leading-relaxed mt-2">Yes! For services above Rs. 6000, we offer flexible installment plans (40%, 40%, 20%).</p>
+      </div>
+      <div class="bg-gray-50 rounded-2xl p-5">
+        <button class="faq-toggle flex justify-between w-full font-bold text-sm text-gray-900">How do I refer someone and earn rewards?<i class="fas fa-chevron-down text-gray-400"></i></button>
+        <p class="faq-content text-xs text-gray-600 leading-relaxed mt-2">Share your unique referral code with friends. When they place an order, you earn rewards that are automatically applied to your next order.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-white pt-12 pb-8 mt-12">
+  <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="space-y-4">
+      <h4 class="text-lg font-black"><i class="fas fa-atom mr-2 text-brand-500"></i>A.T Research Center</h4>
+      <p class="text-xs text-gray-400 leading-relaxed">Providing professional academic and research support services with transparency and quality.</p>
+    </div>
+    <div class="space-y-4">
+      <h4 class="font-bold text-sm">Quick Links</h4>
+      <ul class="space-y-2 text-xs text-gray-400">
+        <li><a href="./portal.html" class="hover:text-brand-500">Login</a></li>
+        <li><a href="./portal.html" class="hover:text-brand-500">Get Started</a></li>
+        <li><a href="https://atresearchofficial.blogspot.com/?m=0" class="hover:text-brand-500">Our Blog</a></li>
+      </ul>
+    </div>
+    <div class="space-y-4">
+      <h4 class="font-bold text-sm">Contact Us</h4>
+      <ul class="space-y-2 text-xs text-gray-400">
+        <li><i class="fas fa-phone-alt mr-2 text-brand-500"></i><a href="https://wa.me/923020463122" class="hover:text-brand-500">+92 302 0463122</a></li>
+        <li><i class="far fa-clock mr-2 text-brand-500"></i>Mon - Sat: 9:00 AM - 9:00 PM</li>
+        <li><i class="fas fa-headset mr-2 text-brand-500"></i>24/7 Live Chat Support</li>
+      </ul>
+    </div>
+  </div>
+  <div class="text-center mt-10 pt-6 border-t border-gray-800">
+    <p class="text-xs text-gray-500">&copy; 2026 A.T Research Center. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<!-- WhatsApp button -->
+<a href="https://wa.me/923020463122" target="_blank" class="fixed bottom-6 left-6 bg-[#25D366] hover:bg-[#20bd5a] text-white w-12 h-12 md:w-14 md:h-14 rounded-full shadow-xl flex items-center justify-center text-2xl md:text-3xl z-50 transition-all hover:scale-110" title="Chat on WhatsApp">
+  <i class="fab fa-whatsapp"></i>
+</a>
+
+<script>
+document.querySelectorAll('.faq-toggle').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var c = btn.parentElement.querySelector('.faq-content');
+    c.style.display = (c.style.display === 'none') ? 'block' : 'none';
+  });
+});
+
+// Optional live stats (ATRC rebuild): refresh the static numbers above from
+// the Worker, using the same base + live-count formula as the portal.
+// Any failure leaves the static fallback values untouched.
+apiCall('getPublicData', {}).then(function(data){
+  if(!data || !data.stats) return;
+  var s = data.stats;
+  function setStat(id, v){ var el = document.getElementById(id); if(el) el.textContent = v; }
+  if(s.completedOrders != null) setStat('stat-orders', (300 + Number(s.completedOrders)) + '+');
+  if(s.inProgressOrders != null) setStat('stat-progress', (100 + Number(s.inProgressOrders)) + '+');
+  if(s.publications != null) setStat('stat-pubs', (30 + Number(s.publications)) + '+');
+  if(s.avgRating) setStat('stat-rating', Number(s.avgRating).toFixed(1) + ' / 5');
+}).catch(function(){});
+</script>
+</body>
+</html>
