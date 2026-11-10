@@ -306,9 +306,25 @@ body{padding-top:var(--ab-h)}
     }
     initAnnounceSlider(ANNOUNCEMENTS_DEFAULT);
     // Called with the Announcements sheet rows when the homepage data loads.
+    var _annLastJson = '';
     window.applyAnnouncements = function(sheetItems){
-      if(sheetItems && sheetItems.length) initAnnounceSlider(sheetItems);
+      if(sheetItems && sheetItems.length){ _annLastJson = JSON.stringify(sheetItems); initAnnounceSlider(sheetItems); }
     };
+    // AUTO-REFRESH announcements from the sheet every 5 seconds — no page
+    // refresh needed. Only re-applies the slider when the list changed.
+    function pollAnnouncements_(){
+      if(document.hidden) return;
+      if(typeof apiCall !== 'function') return;
+      // Logged-in users get announcements with the dashboard reload — skip the separate poll.
+      var _appEl = document.getElementById('app-wrapper');
+      if(_appEl && !_appEl.classList.contains('hidden')) return;
+      apiCall('getAnnouncements', {}).then(function(items){
+        if(!items || !items.length) return;
+        var j = JSON.stringify(items);
+        if(j !== _annLastJson){ _annLastJson = j; if(window.applyAnnouncements) window.applyAnnouncements(items); }
+      }).catch(function(){});
+    }
+    setInterval(pollAnnouncements_, 5000);
     </script>
     <div id="page-loader"><i class="fas fa-atom loader-logo"></i><div class="loader-name">A.T Research Center</div><div class="loader-tag">Professional Portal</div><div class="loader-bar"><span></span></div></div>
     <audio id="notification-sound" preload="auto"></audio>
@@ -1435,6 +1451,8 @@ function applyDashboardData(data, full) {
                 try { renderTickets(data.tickets || []); } catch(e) { console.error('Tickets render:', e); }
                 lastTicketsSignature = ticketSig;
             }
+            // Announcement slider: dashboard reloads refresh it too (logged-in users).
+            if(data.announcements && data.announcements.length && window.applyAnnouncements){ window.applyAnnouncements(data.announcements); }
             if(document.getElementById('my-referral-code')) document.getElementById('my-referral-code').innerText=data.referralCode||'-';
             if(document.getElementById('header-referral-code')) document.getElementById('header-referral-code').innerText=data.referralCode||'-';
             if(document.getElementById('tracking-wallet-balance')) document.getElementById('tracking-wallet-balance').innerText='Rs. '+newBalance.toFixed(2);
@@ -1540,14 +1558,25 @@ function requestRealtimePulse_(){
         return;
       }
       const nextVersion=String(data.syncVersion||'');
+      const nextModified=String(data.sheetModified||'');
       if(!window._realtimeVersion) {
         window._realtimeVersion=nextVersion;
+        window._sheetModified=nextModified;
         return;
       }
+      let _sheetChanged=false;
       if(nextVersion && nextVersion!==window._realtimeVersion){
         window._realtimeVersion=nextVersion;
-        requestLiveDashboard_(false);
+        _sheetChanged=true;
       }
+      // ANY sheet edit (portal write or manual sheet edit) changes the
+      // sheet's Drive modifiedTime — reload the dashboard so balance,
+      // invoices, orders, files and approvals update within ~5s.
+      if(nextModified && nextModified!==window._sheetModified){
+        window._sheetModified=nextModified;
+        _sheetChanged=true;
+      }
+      if(_sheetChanged) requestLiveDashboard_(false);
     })
     .catch(()=>{window._realtimePulseInFlight=false;});
 }
@@ -1565,11 +1594,12 @@ let installmentFallbackInFlight = false;
 function startLiveUpdates() {
   stopLiveUpdates();
   window._realtimeVersion='';
+  window._sheetModified='';
   window._realtimePulseInFlight=false;
   requestLiveDashboard_(true);
   realtimePollTimer=setInterval(()=>{
     if(currentUserEmail && sessionToken && !document.hidden) requestRealtimePulse_();
-  },500);
+  },5000);
   realtimeSafetyTimer=null;
 }
 document.addEventListener('visibilitychange',()=>{
