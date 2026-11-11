@@ -2563,7 +2563,20 @@ function toggleNotifications(){
             if(!orderId) return;
             showToast('Preparing PDF','Converting your file to PDF, please wait...','info');
             apiCall('getOrderPdfLink', {orderId: orderId, token: sessionToken}).then(res=>{
-                if(res && res.success && res.pdfLink){
+                if(res && res.success && res.pdfData){
+                    try{
+                        const bin = atob(res.pdfData);
+                        const bytes = new Uint8Array(bin.length);
+                        for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+                        const blob = new Blob([bytes], {type:'application/pdf'});
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = res.fileName || (orderId + '.pdf');
+                        document.body.appendChild(a); a.click(); a.remove();
+                        setTimeout(()=>URL.revokeObjectURL(url), 5000);
+                        showToast('Download started','Your PDF is downloading.','success');
+                    }catch(e){ showToast('Download failed','Could not prepare the PDF.','error'); }
+                } else if(res && res.success && res.pdfLink){
                     if(res.message) showToast('Opening file', res.message, 'info');
                     window.open(res.pdfLink, '_blank');
                 } else {
